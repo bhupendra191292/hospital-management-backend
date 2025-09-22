@@ -43,7 +43,8 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
+    version: '1.0.1',
+    autoDeployTest: '✅ Auto-deploy is working!'
   });
 });
 
@@ -66,6 +67,17 @@ app.get('/api/fallback/status', (req, res) => {
     message: 'Server is running in fallback mode - MongoDB not available',
     timestamp: new Date().toISOString(),
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// Auto-deploy test endpoint
+app.get('/api/test/auto-deploy', (req, res) => {
+  res.status(200).json({
+    message: '🎉 Auto-deploy test successful!',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1',
+    testId: 'auto-deploy-test-' + Date.now(),
+    status: 'working'
   });
 });
 
