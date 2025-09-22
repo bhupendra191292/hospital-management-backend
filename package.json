@@ -1,16 +1,41 @@
 {
-  "name": "backend",
+  "name": "hospital-management-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+  "description": "Backend API for Hospital Management System",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required for Node.js'",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md}\"",
+    "seed": "node seed.js",
+    "seed:demo": "node seedDemoData.js",
+    "seed:clean": "node clearDatabase.js",
+    "health:check": "node -e \"console.log('Health check passed')\"",
+    "docker:build": "docker build -t hospital-backend .",
+    "docker:run": "docker run -p 5000:5000 hospital-backend"
+  },
+  "keywords": [
+    "hospital",
+    "healthcare",
+    "api",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "Hospital Management Team",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -22,5 +47,25 @@
     "mongoose": "^8.13.2",
     "multer": "^1.4.5-lts.2",
     "pdfkit": "^0.16.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "nodemon": "^3.0.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!node_modules/**",
+      "!coverage/**",
+      "!jest.config.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "testMatch": ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
   }
 }

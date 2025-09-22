@@ -330,3 +330,4 @@ For support, email support@hospitalmanagement.com or create an issue in the repo
 ---
 
 **Built with ❤️ for better healthcare management**
+
