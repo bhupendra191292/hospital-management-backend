@@ -18,10 +18,5 @@
     "JWT_SECRET": "@jwt_secret",
     "NODE_ENV": "production",
     "PORT": "3000"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
   }
 }
