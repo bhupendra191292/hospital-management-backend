@@ -54,7 +54,18 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    version: '1.0.0'
+    version: '1.0.0',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// Fallback endpoint for when MongoDB is not available
+app.get('/api/fallback/status', (req, res) => {
+  res.status(200).json({
+    status: 'fallback',
+    message: 'Server is running in fallback mode - MongoDB not available',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -81,23 +92,67 @@ console.log('✅ NewFlow routes registered');
 // ====== Error Handling ======
 app.use(newFlowErrorHandler);
 
+// Global error handler for Vercel
+app.use((err, req, res, next) => {
+  console.error('🚨 Global error handler:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('🚨 Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // ====== Mongo Connection & Start ======
 const startServer = () => {
-  app.listen(process.env.PORT || 5001, () => {
-    console.log(`✅ Server running at http://localhost:${process.env.PORT || 5001}`);
-    console.log(`🚀 NewFlow routes available at http://localhost:${process.env.PORT || 5001}/api/newflow`);
+  const port = process.env.PORT || 5001;
+  app.listen(port, () => {
+    console.log(`✅ Server running at http://localhost:${port}`);
+    console.log(`🚀 NewFlow routes available at http://localhost:${port}/api/newflow`);
     console.log(`📊 Flow switcher enabled in development mode`);
   });
 };
 
-// Try to connect to MongoDB, but start server even if it fails
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/digital-hospital')
-  .then(() => {
+// MongoDB connection with better error handling for Vercel
+const connectToMongoDB = async () => {
+  try {
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/digital-hospital';
+    console.log('🔗 Attempting to connect to MongoDB...');
+    
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    });
+    
     console.log('✅ Connected to MongoDB');
-    startServer();
-  })
-  .catch(err => {
-    console.warn('⚠️ MongoDB connection failed, starting server in fallback mode:', err.message);
-    console.log('💡 Server will run with mock data for NewFlow development');
-    startServer();
-  });
+    return true;
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error.message);
+    return false;
+  }
+};
+
+// Initialize server
+const initializeServer = async () => {
+  const mongoConnected = await connectToMongoDB();
+  
+  if (!mongoConnected) {
+    console.warn('⚠️ Starting server without MongoDB connection');
+    console.log('💡 Server will run with limited functionality');
+  }
+  
+  startServer();
+};
+
+// Start the server
+initializeServer();
