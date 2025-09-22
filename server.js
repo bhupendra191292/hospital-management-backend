@@ -48,8 +48,9 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    version: '1.0.1',
-    autoDeployTest: '✅ Auto-deploy is working!'
+    version: '1.0.2',
+    autoDeployTest: '✅ Auto-deploy is working!',
+    vercelTest: '✅ Vercel deployment test!'
   });
 });
 
@@ -80,9 +81,20 @@ app.get('/api/test/auto-deploy', (req, res) => {
   res.status(200).json({
     message: '🎉 Auto-deploy test successful!',
     timestamp: new Date().toISOString(),
-    version: '1.0.1',
+    version: '1.0.2',
     testId: 'auto-deploy-test-' + Date.now(),
     status: 'working'
+  });
+});
+
+// Simple test endpoint without database
+app.get('/api/test/simple', (req, res) => {
+  res.status(200).json({
+    message: '✅ Simple test endpoint working!',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    vercel: process.env.VERCEL ? 'true' : 'false',
+    status: 'success'
   });
 });
 
