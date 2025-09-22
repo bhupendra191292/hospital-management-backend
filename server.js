@@ -111,25 +111,19 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🚨 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// ====== Mongo Connection & Start ======
-const startServer = () => {
-  const port = process.env.PORT || 5001;
-  app.listen(port, () => {
-    console.log(`✅ Server running at http://localhost:${port}`);
-    console.log(`🚀 NewFlow routes available at http://localhost:${port}/api/newflow`);
-    console.log(`📊 Flow switcher enabled in development mode`);
-  });
-};
-
-// MongoDB connection with better error handling for Vercel
+// ====== MongoDB Connection ======
 const connectToMongoDB = async () => {
   try {
+    // Skip connection if already connected
+    if (mongoose.connection.readyState === 1) {
+      console.log('✅ MongoDB already connected');
+      return true;
+    }
+
     const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/digital-hospital';
     console.log('🔗 Attempting to connect to MongoDB...');
     
     await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
@@ -142,17 +136,32 @@ const connectToMongoDB = async () => {
   }
 };
 
-// Initialize server
+// ====== Server Initialization ======
 const initializeServer = async () => {
   const mongoConnected = await connectToMongoDB();
   
   if (!mongoConnected) {
-    console.warn('⚠️ Starting server without MongoDB connection');
+    console.warn('⚠️ Server running without MongoDB connection');
     console.log('💡 Server will run with limited functionality');
   }
   
-  startServer();
+  console.log('🚀 Server initialized successfully');
 };
 
-// Start the server
+// Initialize server on startup
 initializeServer();
+
+// ====== Development Server ======
+// Only start the development server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const port = process.env.PORT || 5001;
+  app.listen(port, () => {
+    console.log(`✅ Development server running at http://localhost:${port}`);
+    console.log(`🚀 NewFlow routes available at http://localhost:${port}/api/newflow`);
+    console.log(`📊 Flow switcher enabled in development mode`);
+  });
+}
+
+// ====== Vercel Serverless Export ======
+// For Vercel serverless functions, we need to export the app
+module.exports = app;
