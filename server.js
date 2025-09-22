@@ -33,7 +33,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Only serve static files in development (not in serverless)
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  console.log('📁 Static file serving enabled for uploads');
+}
 
 // Root endpoint for Railway healthcheck
 app.get('/', (req, res) => {
